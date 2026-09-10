@@ -19,3 +19,21 @@ Dependency-Range) + `82a97b9` (Review-Follow-up: server-lokales Lockfile synchro
 Dazwischen liegt der User-Commit `cdce73d` (GitNexus-Skills).
 Review-Ergebnis: alle HIGH-Funde behoben; Docker-Image testweise gebaut und funktionstüchtig
 verifiziert (`:fix-verify`), `latest` unangetastet.
+
+## Abgeschlossene Vorgänge (Historie, Stand 2026-09-10)
+
+### Review-Findings-Branch (gemerged nach main: origin/main = 9d66bff)
+- Runde 2 (`1c51f1b`): E4-Kollisionstest, E6-präzise Fehlermeldungen, E9-README-Naming-Notiz,
+  E15-Root-SDK-Range ^1.30.0 + Lockfile-Sync. tsc exit 0, vitest 19/19.
+- Runde 3 (`5dbb3a3`): Guard in addOperation gegen reserviertes 'operation'-Feld. Der Guard
+  deckte den latenten visualreasoning-Dispatch-Bug auf → aus dem visualization-Toolset entfernt
+  (Einzel-Tool bleibt), visualization = 5 Operationen. Optionsliste bei unbekannter Operation,
+  README-Wording korrigiert, Kollisions-Symmetrie-Test. vitest 19/19, E2E auf Port 3001 grün.
+
+### SWOT-Upgrade (Branch feature/enhance-swot-analysis: 094e46a + 2fd7e91, offen)
+- swot_analysis vom Stub zum Dual-Mode: Facilitation-Scaffold (Leitfragen) ohne Inhalte,
+  Analysis mit Passthrough + TOWS (SO/WO/ST/WT) + Scores (Counts, balance, riskExposure)
+  + Kopplungshinweise (decisionframework/mentalmodel).
+- Review: approve with comments (0 HIGH/CRITICAL); Kommentare umgesetzt (subject trim+min(1),
+  Balance-Semantik dokumentiert/getestet, README-Doku). tsc exit 0, vitest 26/26,
+  E2E-Wire-Verifikation auf Port 3001 grün.

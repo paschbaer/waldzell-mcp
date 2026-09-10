@@ -1,26 +1,28 @@
 # Active Context
 
 ## Current Task
-fix-review-findings-clear-thought (Branch: `feature/fix-review-findings-clear-thought`)
-Vorher abgeschlossen: fix-clear-thought-toolset-schemas (gemerged nach main, deployed).
+enhance-swot-analysis (Branch: `feature/enhance-swot-analysis`, gestapelt auf fix-review-findings-clear-thought)
+Abgeschlossen: fix-review-findings-clear-thought (in main gemerged: origin/main = 9d66bff).
 
 ## Status
-Zweite Review-Runde (Commit 1c51f1b): E4 (Kollisionstest), E6 (präzise Fehlermeldungen),
-E9 (README-Naming-Notiz), E15 (Root-SDK-Range ^1.30.0 + Lockfile-Sync) — alles umgesetzt.
-Review-Urteil: approve with comments (0 HIGH/CRITICAL).
+swot_analysis war ein Stub (subject in feste Templates interpoliert). Upgrade auf Dual-Mode:
+- Facilitation (default, ohne Inhalte): Vier-Quadranten-Scaffold + Leitfragen pro Quadrant,
+  aufrufendes LLM liefert Inhalte und ruft erneut auf.
+- Analysis (mind. ein Quadrant gefüllt): Passthrough der Inhalte, TOWS-Strategien
+  (SO/WO/ST/WT, 2x2-Pairings pro Familie), Scores (Counts, balance = 1-(max-min)/total,
+  riskExposure = (weaknesses+threats)/total), nextSteps mit Verweis auf
+  decisionframework/mentalmodel als Kopplung.
+- Schema: subject required (trim+min(1)), 4 optionale String-Arrays; Whitespace-Filter.
+- Toolset: visualization advertised die neuen optionalen Felder automatisch.
 
-Dritte Runde (Commit 5dbb3a3): die 4 LOW-Findings des Reviews behoben:
-- Guard in addOperation gegen reserviertes 'operation'-Feld (fail-fast statt stillem
-  Diskriminator-Override)
-- Der Guard deckte einen echten latenten Bug auf: visualreasoning (eigenes 'operation'-
-  Datenfeld) kollidierte im visualization-Toolset — Toolset-Variante war nie dispatch-
-  fähig. visualreasoning aus dem Toolset entfernt (Einzel-Tool bleibt voll funktionsfähig),
-  visualization hat jetzt 5 Operationen.
-- Unbekannte/fehlende Operation listet gültige Operationen; README-Wording korrigiert
-  (snake_case ist bei späteren Tools die Mehrheit); Kollisions-Symmetrie-Test ergänzt.
-- Verify: tsc exit 0, vitest 19/19, detect-changes risk low, E2E auf Port 3001
-  (Wire-Level-Feldfehler `claim: Required`, visualization-Enum, Einzel-visualreasoning OK).
+Commits: 094e46a (Feature) + 2fd7e91 (Review-Kommentare: subject-Validierung,
+Balance-Semantik dokumentiert/getestet, README-Doku).
+
+Verify: tsc exit 0, vitest 26/26, E2E auf Port 3001 (Wire): advertised fields,
+facilitation-Scaffold, Toolset-Dispatch mit TOWS+Scores (z. B. Polars vs. DuckDB).
+Review: approve with comments (0 HIGH/CRITICAL), alle Kommentare umgesetzt.
 
 ## Offene Punkte
-- User: Branch `feature/fix-review-findings-clear-thought` nach main mergen und deployen.
+- User: Branch feature/enhance-swot-analysis nach main mergen und deployen
+  (inkl. fix-review-findings, falls noch nicht separat gemerged).
 
