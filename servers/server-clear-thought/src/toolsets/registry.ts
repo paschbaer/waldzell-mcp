@@ -14,6 +14,13 @@ export class ToolsetRegistry {
   constructor(private slug: string, private description: string) {}
 
   addOperation(op: OperationSpec): void {
+    if (op.schema && 'operation' in op.schema) {
+      // An `operation` key would override the z.literal discriminator added in
+      // register(), silently breaking dispatch (find() would miss the op).
+      throw new Error(
+        `Operation '${op.name}' declares a reserved 'operation' field, which would break dispatch of toolset '${this.slug}'. Remove it — the discriminator is added automatically.`
+      );
+    }
     this.operations.push(op);
   }
 
@@ -89,10 +96,13 @@ export class ToolsetRegistry {
       (issue): issue is z.ZodIssue & { unionErrors: z.ZodError[] } =>
         issue.code === 'invalid_union'
     );
-    if (unionIssue?.unionErrors && typeof opName === 'string') {
-      const branch = unionIssue.unionErrors.find((branchError) =>
-        branchError.issues.every((issue) => issue.path[0] !== 'operation')
-      );
+    if (unionIssue?.unionErrors) {
+      const branch =
+        typeof opName === 'string'
+          ? unionIssue.unionErrors.find((branchError) =>
+              branchError.issues.every((issue) => issue.path[0] !== 'operation')
+            )
+          : undefined;
       if (branch && branch.issues.length > 0) {
         return `${prefix} — ${this.formatIssues(branch.issues)}`;
       }

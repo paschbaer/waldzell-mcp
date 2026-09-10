@@ -164,10 +164,9 @@ registered on its own. In addition, four grouped toolset tools are available —
 `operation` parameter (e.g., operation `mentalmodel` within the `reasoning` toolset).
 The examples below use the toolset form.
 
-Note on naming: individual tool names follow each original tool's historical naming — most
-use compact lowercase (`sequentialthinking`, `mentalmodel`), while later additions use
-snake_case (`analogical_mapper`, `seven_seekers_orchestrator`). These names are part of the
-public API and are kept stable.
+Note on naming: individual tool names follow their historical naming — the earlier tools use
+compact lowercase (`sequentialthinking`, `mentalmodel`), while later additions use snake_case
+(`analogical_mapper`, `session_info`). These names are part of the public API and are kept stable.
 
 ### Mental Models
 

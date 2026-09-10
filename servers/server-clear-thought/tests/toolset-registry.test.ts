@@ -119,6 +119,32 @@ it('resolves advertised field collisions first-wins but validates per operation'
   await expect(handler({ operation: 'second', payload: 'not-a-number' }, {})).rejects.toThrow(
     /payload/
   );
+  // symmetric case: the advertised string type must not weaken `first` either
+  await expect(handler({ operation: 'first', payload: 42 }, {})).rejects.toThrow(
+    /Invalid arguments for operation 'first'.*payload/
+  );
   const ok = await handler({ operation: 'second', payload: 42 }, {});
   expect(ok.content[0].text).toBe('second:42');
+});
+
+it('rejects operations declaring the reserved operation field', () => {
+  const { server } = setupServer();
+  const registry = new ToolsetRegistry('guard', 'Reserved field guard');
+  expect(() =>
+    registry.addOperation({
+      name: 'bad',
+      description: 'declares a reserved field',
+      schema: { operation: z.string() },
+      handler: async () => ({ content: [{ type: 'text', text: 'never' }] })
+    })
+  ).toThrow(/reserved 'operation' field/);
+});
+
+it('lists valid operations when arguments are missing entirely', async () => {
+  const { server, state } = setupServer();
+  registerUtilityToolset(server, state);
+  const handler = getTool(server, 'utility').handler;
+  await expect(handler(undefined, {})).rejects.toThrow(
+    /unknown operation\. Valid operations: analogical_mapper/
+  );
 });
