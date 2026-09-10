@@ -11,10 +11,17 @@ it('generates branches from a topic', async () => {
   registerMindMap(server, state);
   // Access the registered tool (private API)
   const tool: any = (server as any)._registeredTools['mind_map'];
-  const result = await tool.callback({ topic: 'cats', num_branches: 2 });
+  const result = await tool.handler({ topic: 'cats', num_branches: 2 });
+
+  expect(result.content[0].text).toContain('cats aspect');
+});
+
+it('generates branches via the visualization toolset', async () => {
+  const server = new McpServer({ name: 'test', version: '0.0.0' });
+  const state = new SessionState('test', defaultConfig);
   registerVisualizationToolset(server, state);
   const tool: any = (server as any)._registeredTools['visualization'];
-  const result = await tool.callback({ operation: 'mind_map', topic: 'cats', num_branches: 2 });
+  const result = await tool.handler({ operation: 'mind_map', topic: 'cats', num_branches: 2 });
 
   expect(result.content[0].text).toContain('cats aspect');
 });

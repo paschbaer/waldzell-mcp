@@ -12,7 +12,7 @@ function setupServer() {
 type ToolCallback = (args: any) => Promise<any>;
 
 function getCallback(server: McpServer): ToolCallback {
-  return (server as any)._registeredTools['utility'].callback;
+  return (server as any)._registeredTools['utility'].handler;
 }
 
 it('assumption xray returns assumptions, confidence and tests', async () => {

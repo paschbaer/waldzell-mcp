@@ -158,6 +158,12 @@ npx @waldzellai/clear-thought
 
 ## Usage
 
+Each individual tool (e.g., `sequentialthinking`, `mentalmodel`, `debuggingapproach`, ...) is
+registered on its own. In addition, four grouped toolset tools are available — `reasoning`,
+`visualization`, `utility`, and `session` — which select the underlying tool via an
+`operation` parameter (e.g., operation `mentalmodel` within the `reasoning` toolset).
+The examples below use the toolset form.
+
 ### Mental Models
 
 ```typescript
@@ -213,7 +219,8 @@ docker run -it waldzellai/clear-thought
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Build the project: `npm run build`
-4. Start the server: `npm start`
+4. Start the server: `npm run start:http` (or `npm start`) — listens on the `PORT` environment variable (default: `3000`)
+5. Run tests: `npm test`
 
 ## Contributing
 

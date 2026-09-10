@@ -19,25 +19,63 @@ export class ToolsetRegistry {
 
   register(server: McpServer): void {
     if (this.operations.length === 0) return;
-    const schemas = this.operations.map((op) =>
+
+    // Strict per-operation schema (discriminated by the `operation` literal),
+    // used to validate incoming arguments before dispatching.
+    const strict = this.operations.map((op) =>
       z.object({ operation: z.literal(op.name), ...op.schema })
     );
-    const schema =
-      schemas.length === 1
-        ? schemas[0]
+    const validator =
+      strict.length === 1
+        ? strict[0]
         : z.union(
-            [schemas[0], schemas[1], ...schemas.slice(2)] as [
+            [strict[0], strict[1], ...strict.slice(2)] as [
               z.ZodTypeAny,
               z.ZodTypeAny,
               ...z.ZodTypeAny[]
             ]
           );
-    const dispatcher = async (args: any) => {
-      const op = this.operations.find((o) => o.name === args.operation);
-      if (!op) throw new Error(`Unknown operation: ${args.operation}`);
-      return op.handler(args);
+
+    // The advertised input schema must be a flat OBJECT schema: the MCP SDK
+    // serializes only object schemas in tools/list (a z.union would degrade
+    // to an empty schema, leaving `operation` undeclarable for clients).
+    // Every operation field is therefore advertised as optional; per-operation
+    // requiredness is enforced by the strict validator in the dispatcher.
+    const advertised: Record<string, ZodTypeAny> = {
+      operation: z
+        .enum(this.operations.map((o) => o.name) as [string, ...string[]])
+        .describe(
+          `Operation to perform. One of: ${this.operations.map((o) => o.name).join(', ')}`
+        )
     };
-    server.tool(this.slug, this.description, schema as any, dispatcher);
+    for (const op of this.operations) {
+      for (const [key, field] of Object.entries(op.schema)) {
+        if (!(key in advertised)) advertised[key] = field.optional();
+      }
+    }
+
+    const dispatcher = async (args: any) => {
+      const parsed = validator.safeParse(args);
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0];
+        const path = issue.path.length ? `${issue.path.join('.')}: ` : '';
+        throw new Error(
+          `Invalid arguments for operation '${args?.operation}' of toolset '${this.slug}' — ${path}${issue.message}`
+        );
+      }
+      const data: any = parsed.data;
+      const op = this.operations.find((o) => o.name === data.operation)!;
+      return op.handler(data);
+    };
+
+    server.registerTool(
+      this.slug,
+      {
+        description: this.description,
+        inputSchema: advertised
+      },
+      dispatcher
+    );
   }
 }
 

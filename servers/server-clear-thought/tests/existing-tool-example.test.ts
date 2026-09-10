@@ -8,7 +8,7 @@ it('echoes provided text', async () => {
   const state = new SessionState('test', defaultConfig);
   registerUtilityToolset(server, state);
   const tool: any = (server as any)._registeredTools['utility'];
-  const result = await tool.callback({ operation: 'existing_tool_example', text: 'hi' });
+  const result = await tool.handler({ operation: 'existing_tool_example', text: 'hi' });
   const data = JSON.parse(result.content[0].text);
   expect(data).toEqual({ echoed: 'hi' });
 });
