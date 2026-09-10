@@ -36,6 +36,30 @@ it('returns a facilitation scaffold when no quadrant content is provided', async
   expect(data.nextSteps.join(' ')).toMatch(/again/i);
   expect(data.status).toBe('success');
   expect(data.tows).toBeUndefined();
+  expect(data.scores).toBeUndefined();
+});
+
+it('rejects an empty or whitespace-only subject at the schema level', () => {
+  const { server, state } = setupServer();
+  registerSwotAnalysis(server, state);
+  const schema = getTool(server, 'swot_analysis').inputSchema;
+  // SDK-level validation trims the subject before the min(1) check
+  expect(schema.safeParse({ subject: '   ' }).success).toBe(false);
+  expect(schema.safeParse({ subject: '' }).success).toBe(false);
+  expect(schema.safeParse({ subject: '  real  ' }).success).toBe(true);
+});
+
+it('reads a deliberately half-filled SWOT as less balanced', async () => {
+  const { server, state } = setupServer();
+  registerSwotAnalysis(server, state);
+  const data = await callSwot(server, {
+    subject: 'half swot',
+    strengths: ['a', 'b'],
+    weaknesses: ['c', 'd']
+  });
+  // counts [2,2,0,0]: empty quadrants lower the balance on purpose —
+  // a half-filled SWOT signals incomplete coverage
+  expect(data.scores.balance).toBe(0.5);
 });
 
 it('passes through quadrant content and derives TOWS strategies in analysis mode', async () => {

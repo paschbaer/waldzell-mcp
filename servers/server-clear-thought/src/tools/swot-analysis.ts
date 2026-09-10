@@ -81,7 +81,9 @@ function buildScores(quads: Quadrants): Record<string, number> {
     weaknesses: quads.weaknesses.length,
     opportunities: quads.opportunities.length,
     threats: quads.threats.length,
-    // 1 = quadrants evenly filled, 0 = single quadrant dominates an empty set
+    // 1 = quadrants evenly filled, 0 = single quadrant dominates an empty
+    // set. Empty quadrants DO lower the balance on purpose: a deliberately
+    // half-filled SWOT reads as less balanced, signaling incomplete coverage.
     balance: total === 0 ? 0 : Number((1 - (max - min) / total).toFixed(2)),
     // share of internal + external negative factors
     riskExposure: total === 0 ? 0 : Number(((quads.weaknesses.length + quads.threats.length) / total).toFixed(2))
@@ -97,6 +99,8 @@ export function registerSwotAnalysis(server: McpServer, _sessionState: SessionSt
     {
       subject: z
         .string()
+        .trim()
+        .min(1)
         .describe('Subject of the analysis (e.g. an architecture or technology decision)'),
       strengths: z
         .array(z.string())

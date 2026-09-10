@@ -168,6 +168,14 @@ Note on naming: individual tool names follow their historical naming — the ear
 compact lowercase (`sequentialthinking`, `mentalmodel`), while later additions use snake_case
 (`analogical_mapper`, `session_info`). These names are part of the public API and are kept stable.
 
+### SWOT analysis
+
+`swot_analysis` works in two modes. Without quadrant content it returns a facilitation
+scaffold with per-quadrant guiding questions. With content provided via the optional
+`strengths` / `weaknesses` / `opportunities` / `threats` arrays it returns the structured
+analysis, TOWS strategies (SO/WO/ST/WT) derived from 2x2 pairings, and scores (per-quadrant
+counts, balance, risk exposure).
+
 ### Mental Models
 
 ```typescript
