@@ -675,7 +675,7 @@
   version "0.0.5"
   resolved "file:servers/server-clear-thought"
   dependencies:
-    "@modelcontextprotocol/sdk" "^1.5.0"
+    "@modelcontextprotocol/sdk" "^1.30.0"
     "@smithery/sdk" "^1.4.3"
     express "^4.18.2"
     lodash "^4.17.21"

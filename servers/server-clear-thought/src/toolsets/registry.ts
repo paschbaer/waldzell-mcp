@@ -57,11 +57,7 @@ export class ToolsetRegistry {
     const dispatcher = async (args: any) => {
       const parsed = validator.safeParse(args);
       if (!parsed.success) {
-        const issue = parsed.error.issues[0];
-        const path = issue.path.length ? `${issue.path.join('.')}: ` : '';
-        throw new Error(
-          `Invalid arguments for operation '${args?.operation}' of toolset '${this.slug}' — ${path}${issue.message}`
-        );
+        throw new Error(this.describeValidationFailure(args, parsed.error));
       }
       const data: any = parsed.data;
       const op = this.operations.find((o) => o.name === data.operation)!;
@@ -76,6 +72,46 @@ export class ToolsetRegistry {
       },
       dispatcher
     );
+  }
+
+  /**
+   * Builds a precise error message for failed dispatch validation. For
+   * multi-operation toolsets the validator is a z.union: zod reports the
+   * failure as one generic `invalid_union` issue whose `unionErrors` carry
+   * the per-branch issues. Pick the branch matching the requested operation
+   * (it has no complaint about the `operation` literal) so the message
+   * names the actually invalid fields instead of just "Invalid input".
+   */
+  private describeValidationFailure(args: any, error: z.ZodError): string {
+    const prefix = `Invalid arguments for operation '${args?.operation}' of toolset '${this.slug}'`;
+    const opName = args?.operation;
+    const unionIssue = error.issues.find(
+      (issue): issue is z.ZodIssue & { unionErrors: z.ZodError[] } =>
+        issue.code === 'invalid_union'
+    );
+    if (unionIssue?.unionErrors && typeof opName === 'string') {
+      const branch = unionIssue.unionErrors.find((branchError) =>
+        branchError.issues.every((issue) => issue.path[0] !== 'operation')
+      );
+      if (branch && branch.issues.length > 0) {
+        return `${prefix} — ${this.formatIssues(branch.issues)}`;
+      }
+      return `${prefix} — unknown operation. Valid operations: ${this.operations
+        .map((o) => o.name)
+        .join(', ')}`;
+    }
+    const issue = error.issues[0];
+    const path = issue.path.length ? `${issue.path.join('.')}: ` : '';
+    return `${prefix} — ${path}${issue.message}`;
+  }
+
+  private formatIssues(issues: z.ZodIssue[]): string {
+    return issues
+      .slice(0, 3)
+      .map((issue) =>
+        issue.path.length ? `${issue.path.join('.')}: ${issue.message}` : issue.message
+      )
+      .join('; ');
   }
 }
 
