@@ -23,6 +23,28 @@
   Operationsfeldern (optional) advertisen; strenge Validierung per Discriminated-Union im
   Dispatcher ausführen. Registrierung über `server.registerTool()` (SDK >= 1.11).
 
+### npm's minimale Lockfile-Upgrades halten alte Toolchains am Leben — bis der Docker-Build
+- **Issue**: Lockfile-Regenerierung aus einem Alt-Lock behielt TypeScript 5.8.3 (statt 5.9.3) →
+  TS2589 mit SDK-1.30-Generics, aber NUR im Docker-Build; lokal (Root-node_modules, TS 5.9.3) lief alles.
+- **Root Cause**: `npm install` aktualisiert bestehende Lock-Einträge nur minimal (Versionen, die die
+  Range erfüllen, bleiben). Root- und Server-Umgebung hatten dadurch unterschiedliche Toolchains.
+- **Prevention**: Bei Versions-Scherwen Lockfile KOMPLETT frisch generieren (nur package.json ins
+  Temp-Dir, Alt-Lock löschen) und die Zielumgebung (Container!) tatsächlich bauen — `npm ci --dry-run`
+  beweist nur Manifest-Sync, nicht Kompilierbarkeit.
+
+### Dockerfile-Base-Images altern: node:18 + MCP SDK 1.30 = 'crypto is not defined'
+- **Issue**: Image baute sauber, aber jeder MCP-Request lief auf 400 "Parse error: crypto is not defined".
+- **Root Cause**: Globales Webcrypto (`crypto.randomUUID()`) ist erst ab Node 20 stabil; node:18 ist
+  seit 2025 EOL, das SDK-Deps-Baum nutzt es zur Laufzeit.
+- **Prevention**: Base-Images an aktuelle LTS koppeln (node:22-alpine) und `engines` im Manifest
+  ehrlich anheben. Ein Build ohne Laufzeit-Smoke-Test (Health + ein echter Tool-Call) ist kein Test.
+
+### Windows-Exes (docker.exe/cmd.exe) aus WSL-CWDs ohne Windows-Pendant starten nicht
+- **Issue**: `docker.exe`/`cmd.exe` liefen aus `/tmp/...` heraus lautlos ins Leere (kein Output,
+  kein Build), obwohl der Daemon erreichbar war.
+- **Prevention**: Vor jedem Aufruf einer Windows-Exe nach `/mnt/c/...` wechseln; Build-Kontexte auf
+  Windows-Pfaden (C:\...) über `cmd.exe /c "cd /d ... && ..."` ansprechen.
+
 ### Merge-Konflikt-Marker überleben Builds, wenn niemand baut
 - **Issue**: `src/tools/index.ts` enthielt `=======` (TS1185) plus fehlende Imports — der Server
   lief weiter, weil die Instanz aus einem älteren Build stammte.

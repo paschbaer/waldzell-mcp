@@ -11,9 +11,11 @@
 ## What's left
 - User: Instanz auf Port 3000 neu bauen/starten, VS-Code-MCP-Client neu verbinden.
 - User: Feature-Branch `feature/fix-clear-thought-toolset-schemas` nach `main` mergen (Squash).
-- Optional: Docker-Image-Build als Smoke-Test (Lockfile-Konsistenz ist per `npm ci --dry-run` belegt).
 
 ## Current State
 Commits auf Feature-Branch: `0995706` (Haupt-Fix: registry.ts, tools/index.ts, Tests, README,
-Dependency-Range) + `82a97b9` (Review-Follow-up: server-lokales Lockfile synchronisiert).
-Review-Ergebnis: alle HIGH-Funde behoben, verbleibende LOW-Funde als akzeptiert dokumentiert.
+Dependency-Range) + `82a97b9` (Review-Follow-up: server-lokales Lockfile synchronisiert) +
+`c27a860` (Docker-Smoke: Lockfile frisch generiert, Base-Image node:22-alpine, engines >=20).
+Dazwischen liegt der User-Commit `cdce73d` (GitNexus-Skills).
+Review-Ergebnis: alle HIGH-Funde behoben; Docker-Image testweise gebaut und funktionstüchtig
+verifiziert (`:fix-verify`), `latest` unangetastet.
