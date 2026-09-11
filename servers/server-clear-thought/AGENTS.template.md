@@ -50,7 +50,7 @@ Toolset routing:
 |---|---|
 | `reasoning` | `sequentialthinking`, `mentalmodel`, `debuggingapproach`, `collaborativereasoning`, `decisionframework`, `metacognitivemonitoring`, `socraticmethod`, `creativethinking`, `systemsthinking`, `scientificmethod`, `structuredargumentation` |
 | `visualization` | `mind_map`, `concept_map`, `fishbone_diagram`, `swot_analysis`, `issue_tree` |
-| `utility` | `analogical_mapper`, `assumption_xray`, `comparative_advantage`, `drag_point_audit`, `safe_struggle_designer`, `seven_seekers_orchestrator`, `value_of_information`, `existing_tool_example` |
+| `utility` | `analogical_mapper`, `assumption_xray`, `comparative_advantage`, `drag_point_audit`, `safe_struggle_designer`, `seven_seekers_orchestrator`, `value_of_information`, `existing_tool_example`, `agents_guide` |
 | `session` | `session_info`, `session_export`, `session_import` |
 
 ## Tool routing table
@@ -82,6 +82,7 @@ Toolset routing:
 | Orchestrate multi-lens research | `seven_seekers_orchestrator` | `query`, optional `downstream_tools[]` |
 | Quantify if research is worth it | `value_of_information` | `decision_options[]`, `uncertainties[]`, `payoffs[]` |
 | Smoke-test the tool wiring | `existing_tool_example` | `text` — echoes it back; useful to verify connectivity |
+| Get this guide as AGENTS.md content | `agents_guide` | optional `project_name`, `domain_context`, `codebase_root`; pass `existing_agents_md` to merge into existing content |
 | Inspect session state | `session_info` | — |
 | Persist / restore state | `session_export` / `session_import` | — |
 

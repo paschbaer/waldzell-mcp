@@ -1,8 +1,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defaultConfig } from '../src/config.js';
 import { SessionState } from '../src/state/SessionState.js';
 import { registerAgentsGuide } from '../src/tools/agents-guide.js';
+import { AGENTS_TEMPLATE } from '../src/tools/agents-guide-template.js';
 import { registerUtilityToolset } from '../src/toolsets/utility.js';
 
 const START = '<!-- clear-thought:agents-guide:start -->';
@@ -110,4 +114,47 @@ it('rejects whitespace-only parameter values', () => {
   const schema = getTool(server, 'agents_guide').inputSchema;
   expect(schema.safeParse({ project_name: '   ' }).success).toBe(false);
   expect(schema.safeParse({ existing_agents_md: '' }).success).toBe(false);
+});
+
+it('embedded template stays in sync with AGENTS.template.md', () => {
+  const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const onDisk = readFileSync(join(pkgRoot, 'AGENTS.template.md'), 'utf8').replace(/\r\n/g, '\n');
+  expect(AGENTS_TEMPLATE).toBe(onDisk);
+});
+
+it('merge surfaces codebase_root as context line', async () => {
+  const { server, state } = setupServer();
+  registerAgentsGuide(server, state);
+  const data = await call(server, {
+    project_name: 'Tradix',
+    codebase_root: 'C:/repos/Tradix',
+    existing_agents_md: '# Rules\n'
+  });
+  expect(data.content).toContain('Project: Tradix');
+  expect(data.content).toContain('Codebase root: C:/repos/Tradix');
+});
+
+it('appends with a warning instead of deleting content around corrupt markers', async () => {
+  const { server, state } = setupServer();
+  registerAgentsGuide(server, state);
+  // stray START without END: a naive span replace would delete user content
+  const corrupt = '# Rules\n' + START + '\nuser notes that must survive\n';
+  const data = await call(server, { project_name: 'P', existing_agents_md: corrupt });
+
+  expect(data.block_replaced).toBe(false);
+  expect(data.warning).toMatch(/incomplete or duplicated/i);
+  // nothing was deleted — corrupt markers and user content are still present
+  expect(data.content).toContain('user notes that must survive');
+  expect(data.content.split(START).length - 1).toBe(2);
+});
+
+it('appends with a warning when END appears before START', async () => {
+  const { server, state } = setupServer();
+  registerAgentsGuide(server, state);
+  const corrupt = '# Rules\n' + END + '\nsome text\n' + START + '\nbody\n';
+  const data = await call(server, { project_name: 'P', existing_agents_md: corrupt });
+
+  expect(data.block_replaced).toBe(false);
+  expect(data.warning).toBeDefined();
+  expect(data.content).toContain('some text');
 });

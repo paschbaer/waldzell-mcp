@@ -1,9 +1,7 @@
 import { z } from 'zod';
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { SessionState } from '../state/SessionState.js';
+import { AGENTS_TEMPLATE } from './agents-guide-template.js';
 
 const START_MARKER = '<!-- clear-thought:agents-guide:start -->';
 const END_MARKER = '<!-- clear-thought:agents-guide:end -->';
@@ -56,6 +54,7 @@ export function registerAgentsGuide(server: McpServer, _sessionState: SessionSta
         .string()
         .trim()
         .min(1)
+        .max(2_000_000)
         .optional()
         .describe(
           'Content of an existing AGENTS.md. Providing it switches to merge mode: ' +
@@ -76,12 +75,14 @@ export function registerAgentsGuide(server: McpServer, _sessionState: SessionSta
 
       let mode: 'full' | 'merge' = 'full';
       let blockReplaced = false;
+      let warning: string | undefined;
       let content: string;
 
       if (args.existing_agents_md !== undefined) {
         mode = 'merge';
         const merged = integrateIntoExisting(args.existing_agents_md, block);
         blockReplaced = merged.blockReplaced;
+        warning = merged.warning;
         content = merged.content;
       } else {
         content = buildFullDocument(rendered, block);
@@ -99,6 +100,7 @@ export function registerAgentsGuide(server: McpServer, _sessionState: SessionSta
               {
                 mode,
                 block_replaced: blockReplaced,
+                ...(warning ? { warning } : {}),
                 content,
                 unresolved_placeholders: unresolved,
                 nextSteps: [
@@ -122,10 +124,10 @@ export function registerAgentsGuide(server: McpServer, _sessionState: SessionSta
   );
 }
 
+/** The AGENTS.md template is embedded (see agents-guide-template.ts) so it
+ *  survives Docker builds with *.md ignores and single-file bundling. */
 function loadTemplate(): string {
-  // src/tools/agents-guide.ts -> package root is two levels up (same after build)
-  const here = dirname(fileURLToPath(import.meta.url));
-  return readFileSync(join(here, '..', '..', 'AGENTS.template.md'), 'utf8');
+  return AGENTS_TEMPLATE;
 }
 
 function applyPlaceholders(template: string, placeholders: Placeholder[]): string {
@@ -142,14 +144,15 @@ function valueOrFallback(p: Placeholder): string {
 
 /** Drop the template-usage preamble; split into head (H1 + intro) and body. */
 function splitGuide(rendered: string): { head: string; body: string } {
-  const bodyStart = rendered.indexOf(BODY_HEADING);
-  if (bodyStart === -1) {
-    throw new Error('AGENTS template is malformed: missing "## Ground rules" heading');
-  }
   const headingStart = rendered.indexOf(GUIDE_HEADING);
-  const headStart = headingStart === -1 ? 0 : headingStart;
+  const bodyStart = rendered.indexOf(BODY_HEADING);
+  if (headingStart === -1 || bodyStart === -1 || bodyStart < headingStart) {
+    throw new Error(
+      'AGENTS template is malformed: expected "# Clear Thought — Reasoning Tool Guide" followed by "## Ground rules"'
+    );
+  }
   return {
-    head: rendered.slice(headStart, bodyStart).trimEnd(),
+    head: rendered.slice(headingStart, bodyStart).trimEnd(),
     body: rendered.slice(bodyStart).trimEnd()
   };
 }
@@ -177,14 +180,35 @@ function buildFullDocument(rendered: string, block: string): string {
   return `${head}\n\n${block}\n`;
 }
 
-function integrateIntoExisting(existing: string, block: string): { content: string; blockReplaced: boolean } {
+function integrateIntoExisting(
+  existing: string,
+  block: string
+): { content: string; blockReplaced: boolean; warning?: string } {
+  const startCount = existing.split(START_MARKER).length - 1;
+  const endCount = existing.split(END_MARKER).length - 1;
   const startIdx = existing.indexOf(START_MARKER);
-  const endIdx = existing.lastIndexOf(END_MARKER);
-  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+  const endIdx = existing.indexOf(END_MARKER);
+
+  // Replace only an intact single marker pair; with corrupt markers (stray
+  // START without END, END before START, multiple pairs) replacing the span
+  // [first START .. last END] could silently delete user content, so append
+  // instead and tell the caller.
+  if (startCount === 1 && endCount === 1 && startIdx !== -1 && endIdx > startIdx) {
     const before = existing.slice(0, startIdx).trimEnd();
     const after = existing.slice(endIdx + END_MARKER.length).trimStart();
-    const joined = after.length > 0 ? `${before}\n${block}\n\n${after}` : `${before}\n${block}`;
+    const joined =
+      after.length > 0 ? `${before}\n\n${block}\n\n${after}` : `${before}\n\n${block}`;
     return { content: `${joined}\n`, blockReplaced: true };
+  }
+  if (startCount > 0 || endCount > 0) {
+    return {
+      content: `${existing.trimEnd()}\n\n${block}\n`,
+      blockReplaced: false,
+      warning:
+        'The existing content contains incomplete or duplicated clear-thought guide markers; ' +
+        'the guide was appended instead of replacing them. Clean up the stray ' +
+        `${START_MARKER} / ${END_MARKER} lines manually and re-run to restore in-place updates.`
+    };
   }
   const base = existing.trimEnd();
   return { content: `${base}\n\n${block}\n`, blockReplaced: false };
