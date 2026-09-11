@@ -77,11 +77,11 @@ Toolset routing:
 | Decompose a problem into sub-issues | `issue_tree` | `problem`, `depth`; optional `sub_questions[]` — without them a facilitation scaffold is returned |
 | Import solution patterns from other domains | `analogical_mapper` | `problem`, `seed_domains[]`, `k` — returns per-domain guiding questions (scaffold; you construct the analogy) |
 | Surface hidden assumptions | `assumption_xray` | `claim`, `context` — heuristic extraction (universality, causality, necessity, comparatives) with evidence, heuristic confidence and falsification tests |
-| Pick the best executor for tasks | `comparative_advantage` | `skills` (map of agent → { skill: level }), `tasks` (map of task → required skills[]) — scores each agent per task's required skills; missing skills count as 0 |
+| Pick the best executor for tasks | `comparative_advantage` | `skills` (map of agent → { skill: level }), `tasks` (map of task → required skills[]); optional `capacity` (max tasks per agent → greedy multi-task assignment) and `costs` (effective score = skill score / cost); missing skills count as 0 |
 | Find friction in a process log | `drag_point_audit` | `log` (real scan: keyword counts, repeated messages, drag density); `categories[]` = keywords (default: error, warning, timeout, retry, slow) |
-| Design deliberate practice | `safe_struggle_designer` | `skill`, `current_level`, `target_level` (must be greater), optional `constraints` — review interval derived from the level gap |
+| Design deliberate practice | `safe_struggle_designer` | `skill`, `current_level`, `target_level` (must be greater); optional `hours_per_week`, `session_minutes`, `deadline_weeks` — returns success criteria + prerequisite chain per step, derived review intervals and deadline-overrun warnings |
 | Orchestrate multi-lens research | `seven_seekers_orchestrator` | `query`, optional `downstream_tools[]` — returns a 7-lens scaffold (empirical, logical, ethical, pragmatic, systemic, creative, critical) with guiding questions |
-| Quantify if research is worth it | `value_of_information` | `decision_options[]`, `uncertainties[]`, `payoffs[]` (opportunity cost per uncertainty, same order) — EVPI-style estimate with ranked uncertainties |
+| Quantify if research is worth it | `value_of_information` | `decision_options[]`, `uncertainties[]`, `payoffs[]` (opportunity cost per uncertainty); optional `probabilities[]` (0-1, weighted instead of worst-case), `option_payoffs` (per-option matrix → per-option VoI ranking), `sampled_uncertainties[]` (partial VoI + share of total) |
 | Smoke-test the tool wiring | `existing_tool_example` | `text` — echoes it back; useful to verify connectivity |
 | Get this guide as AGENTS.md content | `agents_guide` | optional `project_name`, `domain_context`, `codebase_root`; pass `existing_agents_md` to merge into existing content |
 | Inspect session state | `session_info` | — |
