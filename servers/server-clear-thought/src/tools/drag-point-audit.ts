@@ -48,7 +48,10 @@ export function registerDragPointAudit(server: McpServer, _sessionState: Session
         };
       }
 
-      const cats = (categories ?? DEFAULT_CATEGORIES).map((c) => c.trim()).filter(Boolean);
+      const supplied = (categories ?? DEFAULT_CATEGORIES.map((c) => c))
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const cats = supplied.length > 0 ? supplied : [...DEFAULT_CATEGORIES];
       const lowerLines = lines.map((line) => line.toLowerCase());
       const drag_points = cats.map((category) => ({
         category,

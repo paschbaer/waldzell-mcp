@@ -27,9 +27,10 @@ structured reasoning tools. This guide tells you **which tool to use when**,
    call — the tools are designed to chain.
 3. **Close what you open.** Iterative tools end with a `next*Needed` flag; set
    it to `false` when done. Never leave a thinking sequence dangling.
-4. **State lives server-side per session.** Most stateful tools (e.g.
-   `sequentialthinking`, `swot_analysis`) return a `sessionContext` block with
-   accumulated stats — read it, don't duplicate it.
+4. **State lives server-side per session.** The stateful reasoning tools
+   (e.g. `sequentialthinking`, `mentalmodel`, `debuggingapproach`) return a
+   `sessionContext` block with accumulated stats — read it, don't duplicate it.
+   Stateless utilities (e.g. `swot_analysis`, `value_of_information`) do not.
 5. **Prefer the cheapest sufficient tool.** A `mentalmodel` pass is cheaper
    than a full `decisionframework`; use the heavier tools for heavier stakes.
 
@@ -72,7 +73,7 @@ Toolset routing:
 | Hierarchical brainstorm | `mind_map` | `topic`; optional `branches[]` ({ title, subtopics[] }) — without it a facilitation scaffold is returned |
 | Relate concepts with labels | `concept_map` | `main_concept`; optional `related_concepts[]` + `relations[]` — without them a facilitation scaffold is returned |
 | Root-cause analysis (many causes) | `fishbone_diagram` | `problem`; optional `causes[]` ({ category, causes[] }) — without it a facilitation scaffold is returned |
-| Strategic assessment of one subject | `swot_analysis` | `subject` (required); optional `strengths[]`, `weaknesses[]`, `opportunities[]`, `threats[]` — **see dual-mode note below** |
+| Strategic assessment of one subject | `swot_analysis` | `subject` (required); optional quadrant arrays — plain strings or weighted objects `{ text, impact 1-5, likelihood 1-5, tags[] }`; `topN`, `matchMode` — **see dual-mode note below** |
 | Decompose a problem into sub-issues | `issue_tree` | `problem`, `depth`; optional `sub_questions[]` — without them a facilitation scaffold is returned |
 | Import solution patterns from other domains | `analogical_mapper` | `problem`, `seed_domains[]`, `k` — returns per-domain guiding questions (scaffold; you construct the analogy) |
 | Surface hidden assumptions | `assumption_xray` | `claim`, `context` — heuristic extraction (universality, causality, necessity, comparatives) with evidence, heuristic confidence and falsification tests |
@@ -104,11 +105,17 @@ Several tools (`swot_analysis`, `mind_map`, `concept_map`, `fishbone_diagram`,
 - **Call with only `subject`** when you have not yet gathered content: you get
   a facilitation scaffold with per-quadrant guiding questions. Answer them,
   then call again **with filled arrays**.
-- **Call with filled arrays** to get the structured analysis: your content
-  passed through, TOWS strategies (`so`/`wo`/`st`/`wt`, derived from 2×2
-  pairings), and `scores` (per-quadrant counts, `balance` 0–1, `riskExposure`
-  0–1). Low `balance` = incomplete coverage — fill the empty quadrants before
-  deciding.
+- **Call with filled arrays** to get the structured analysis. Quadrant
+  entries may be plain strings or weighted objects `{ text, impact 1-5,
+  likelihood 1-5, tags[] }` (defaults 3/3, no tags). The response contains
+  TOWS strategies ranked by weight (`towsRanked` per `so`/`wo`/`st`/`wt`),
+  `scores` (counts, `balance`, `riskExposure`, `weighted`) and `meta`
+  (`truncatedPerQuadrant`, `weightedEntries`, `unpaired`).
+- `topN` defaults to **5** ranked pairs per TOWS family (0 = unlimited) —
+  check `meta.truncatedPerQuadrant` so silent truncation of long lists is
+  not mistaken for a complete analysis.
+- `matchMode: 'tags'` pairs only entries sharing a tag (case-insensitive);
+  `meta.unpaired` lists what could not be paired.
 - Never present the facilitation scaffold as an analysis result.
 
 ## Workflow recipes

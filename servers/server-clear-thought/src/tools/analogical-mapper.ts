@@ -25,6 +25,7 @@ export function registerAnalogicalMapper(server: McpServer, _sessionState: Sessi
       k: z
         .number()
         .int()
+        .min(1)
         .optional()
         .describe('Max number of domains to use (default 3)')
     },

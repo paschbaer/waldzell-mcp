@@ -13,6 +13,7 @@ export function registerMindMap(server: McpServer, _sessionState: SessionState) 
       num_branches: z
         .number()
         .int()
+        .min(1)
         .optional()
         .describe('Suggested branch count for the facilitation scaffold (default 3)'),
       branches: z
