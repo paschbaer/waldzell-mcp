@@ -15,65 +15,216 @@ function getCallback(server: McpServer): ToolCallback {
   return (server as any)._registeredTools['utility'].handler;
 }
 
-it('assumption xray returns assumptions, confidence and tests', async () => {
+async function call(server: McpServer, args: Record<string, unknown>) {
+  const result = await getCallback(server)(args, {});
+  return JSON.parse(result.content[0].text);
+}
+
+it('assumption_xray extracts assumptions with evidence and falsification tests', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'assumption_xray', claim: 'A', context: 'B' });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['assumptions', 'confidence', 'tests']);
+  const data = await call(server, {
+    operation: 'assumption_xray',
+    claim: 'All deployments always fail because the pipeline is the slowest',
+    context: 'release engineering'
+  });
+
+  expect(data.mode).toBe('analysis');
+  expect(data.assumptions.length).toBeGreaterThanOrEqual(2);
+  for (const a of data.assumptions) {
+    expect(a.kind).toBeDefined();
+    expect(a.evidence.length).toBeGreaterThan(0);
+    expect(a.falsification_test).toMatch(/counterexample|experiment|constraints|Benchmark/);
+    expect(a.confidence).toBeGreaterThan(0);
+  }
+  expect(typeof data.confidence).toBe('number');
 });
 
-it('value of information returns score and questions', async () => {
+it('assumption_xray falls back to probing questions when no markers match', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'value_of_information', decision_options: ['a'], uncertainties: ['u'], payoffs: [1] });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['voi_score', 'high_impact_questions']);
+  const data = await call(server, {
+    operation: 'assumption_xray',
+    claim: 'The report file is stored in the S3 bucket.'
+  });
+
+  expect(data.mode).toBe('no_marker');
+  expect(data.assumptions).toEqual([]);
+  expect(data.probing_questions.length).toBeGreaterThan(0);
 });
 
-it('drag point audit returns drag points and summary score', async () => {
+it('value_of_information ranks uncertainties by impact and warns on length mismatch', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'drag_point_audit', log: '...' });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['drag_points', 'summary_score']);
+  const data = await call(server, {
+    operation: 'value_of_information',
+    decision_options: ['polars', 'duckdb'],
+    uncertainties: ['latency at scale', 'sql parity', 'memory ceiling'],
+    payoffs: [3, 9, 1]
+  });
+
+  // EVPI-style: mean of positive impacts
+  expect(data.voi_score).toBeCloseTo(4.33, 1);
+  expect(data.ranked_uncertainties[0]).toEqual({ uncertainty: 'sql parity', impact: 9 });
+  expect(data.ranked_uncertainties[2].impact).toBe(1);
+  expect(data.high_impact_questions[0]).toContain('sql parity');
+  expect(data.nextSteps.join(' ')).toMatch(/Resolve/i);
 });
 
-it('safe struggle designer returns steps, measures and intervals', async () => {
+it('value_of_information warns when payoffs and uncertainties mismatch', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'safe_struggle_designer', skill: 'x', current_level: 1, target_level: 2 });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['scaffold_steps', 'safety_measures', 'review_intervals']);
+  const data = await call(server, {
+    operation: 'value_of_information',
+    decision_options: ['a'],
+    uncertainties: ['u1', 'u2'],
+    payoffs: [5]
+  });
+  expect(data.warnings.join(' ')).toMatch(/missing entries were treated as 0/i);
 });
 
-it('comparative advantage returns advantage map', async () => {
+it('drag_point_audit counts keyword occurrences, repeats and density from the log', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'comparative_advantage', skills: { a: 1 }, tasks: { t1: ['a'] } });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['advantage_map']);
+  const data = await call(server, {
+    operation: 'drag_point_audit',
+    log: [
+      '10:00 ERROR connection refused',
+      '10:01 retrying connection',
+      '10:01 ERROR connection refused',
+      '10:02 ok',
+      '10:03 slow query took 4s',
+      'timeout while waiting for upstream',
+      'timeout while waiting for upstream'
+    ].join('\n')
+  });
+
+  expect(data.mode).toBe('analysis');
+  const byCategory = Object.fromEntries(data.drag_points.map((d: any) => [d.category, d.count]));
+  expect(byCategory.error).toBe(2);
+  expect(byCategory.retry).toBe(1);
+  expect(byCategory.timeout).toBe(2);
+  expect(byCategory.slow).toBe(1);
+  expect(data.repeated_messages[0]).toEqual({ message: 'timeout while waiting for upstream', count: 2 });
+  expect(data.total_line_count).toBe(7);
+  // flagged lines: all except '10:02 ok' -> 6 of 7
+  expect(data.drag_density).toBe(0.86);
+  expect(data.summary_score).toBe(0.86);
 });
 
-it('analogical mapper returns analogies and prompts', async () => {
+it('drag_point_audit returns a facilitation scaffold for an empty log', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'analogical_mapper', problem: 'p' });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['analogies', 'suggested_prompts']);
+  const data = await call(server, { operation: 'drag_point_audit', log: '   ' });
+  expect(data.mode).toBe('facilitation');
+  expect(data.drag_points).toEqual([]);
+  expect(data.guiding_questions.length).toBeGreaterThan(0);
 });
 
-it('seven seekers orchestrator returns results, resonance and synthesis', async () => {
+it('safe_struggle_designer derives ladder and review interval from the level gap', async () => {
   const { server, state } = setupServer();
   registerUtilityToolset(server, state);
-  const cb = getCallback(server);
-  const result = await cb({ operation: 'seven_seekers_orchestrator', query: 'q' });
-  const data = JSON.parse(result.content[0].text);
-  expect(Object.keys(data)).toEqual(['seeker_results', 'resonance_map', 'synthesis']);
+  const data = await call(server, {
+    operation: 'safe_struggle_designer',
+    skill: 'sql',
+    current_level: 1,
+    target_level: 3
+  });
+
+  expect(data.level_gap).toBe(2);
+  expect(data.scaffold_steps).toHaveLength(2);
+  expect(data.scaffold_steps[0]).toContain('level 2');
+  expect(data.review_intervals).toBe('weekly');
+});
+
+it('safe_struggle_designer uses monthly reviews for large gaps and rejects inverted levels', async () => {
+  const { server, state } = setupServer();
+  registerUtilityToolset(server, state);
+  const data = await call(server, {
+    operation: 'safe_struggle_designer',
+    skill: 'rust',
+    current_level: 1,
+    target_level: 6
+  });
+  expect(data.scaffold_steps).toHaveLength(5);
+  expect(data.review_intervals).toBe('monthly');
+
+  await expect(
+    getCallback(server)({ operation: 'safe_struggle_designer', skill: 'x', current_level: 3, target_level: 1 }, {})
+  ).rejects.toThrow(/must be greater than current_level/);
+});
+
+it('comparative_advantage matches tasks against required skills per agent', async () => {
+  const { server, state } = setupServer();
+  registerUtilityToolset(server, state);
+  const data = await call(server, {
+    operation: 'comparative_advantage',
+    skills: {
+      alice: { sql: 5, python: 1 },
+      bob: { sql: 1, python: 5 }
+    },
+    tasks: {
+      migrate_db: ['sql'],
+      build_pipeline: ['python']
+    }
+  });
+
+  const byTask = Object.fromEntries(data.advantage_map.map((e: any) => [e.task, e]));
+  expect(byTask.migrate_db.assignee).toBe('alice');
+  expect(byTask.migrate_db.score).toBe(5);
+  expect(byTask.build_pipeline.assignee).toBe('bob');
+  expect(byTask.build_pipeline.score).toBe(5);
+  expect(byTask.build_pipeline.breakdown).toHaveLength(2);
+  expect(data.status).toBe('success');
+});
+
+it('comparative_advantage reports missing skills as warnings', async () => {
+  const { server, state } = setupServer();
+  registerUtilityToolset(server, state);
+  const data = await call(server, {
+    operation: 'comparative_advantage',
+    skills: { alice: { sql: 4 } },
+    tasks: { infra: ['terraform'] }
+  });
+
+  expect(data.advantage_map[0].assignee).toBe('alice'); // only agent, score 0
+  expect(data.advantage_map[0].missing_skills).toEqual(['terraform']);
+  expect(data.warnings.join(' ')).toMatch(/terraform/);
+});
+
+it('analogical_mapper returns an honest scaffold without fabricated analogies', async () => {
+  const { server, state } = setupServer();
+  registerUtilityToolset(server, state);
+  const data = await call(server, {
+    operation: 'analogical_mapper',
+    problem: 'Backtest engine choice',
+    seed_domains: ['math', 'biology'],
+    k: 2
+  });
+
+  expect(data.mode).toBe('facilitation');
+  expect(data.lenses).toHaveLength(2);
+  expect(data.lenses[0].domain).toBe('math');
+  expect(data.lenses[0].guiding_questions.length).toBeGreaterThan(0);
+  expect(data.analogies).toBeUndefined(); // no fabricated content
+  expect(data.suggested_prompts.join(' ')).toMatch(/structure/i);
+});
+
+it('seven_seekers_orchestrator returns seven lens scaffolds with guiding questions', async () => {
+  const { server, state } = setupServer();
+  registerUtilityToolset(server, state);
+  const data = await call(server, {
+    operation: 'seven_seekers_orchestrator',
+    query: 'Should we rewrite the scanner?',
+    downstream_tools: ['decisionframework']
+  });
+
+  expect(data.mode).toBe('facilitation');
+  expect(data.lenses).toHaveLength(7);
+  for (const lens of data.lenses) {
+    expect(lens.guiding_questions).toHaveLength(2);
+  }
+  expect(data.suggested_downstream_tools).toEqual(['decisionframework']);
+  expect(data.resonance_map).toBeUndefined(); // fake resonance removed
+  expect(data.nextSteps.join(' ')).toMatch(/synthesize/i);
 });

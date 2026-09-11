@@ -69,24 +69,37 @@ Toolset routing:
 | Test a hypothesis empirically | `scientificmethod` | `stage`: `observation` → `question` → `hypothesis` → `experiment` → `analysis` → `conclusion` → `iteration`; variables (independent/dependent/controlled/confounding), status: `proposed`/`testing`/`supported`/`refuted`/`refined` |
 | Build or attack an argument | `structuredargumentation` | `claim`, `premises[]`, `conclusion`, `argumentType`, `confidence` (0–1) |
 | Sketch a diagram of reasoning | `visualreasoning` | `operation`: `create` \| `update` \| `delete` \| `transform` \| `observe`; `diagramId`, `diagramType`, `iteration`, `nextOperationNeeded` |
-| Hierarchical brainstorm | `mind_map` | `topic`, `num_branches` |
-| Relate concepts with labels | `concept_map` | `main_concept`, optional `related_concepts[]` |
-| Root-cause analysis (many causes) | `fishbone_diagram` | effect + categorized causes |
+| Hierarchical brainstorm | `mind_map` | `topic`; optional `branches[]` ({ title, subtopics[] }) — without it a facilitation scaffold is returned |
+| Relate concepts with labels | `concept_map` | `main_concept`; optional `related_concepts[]` + `relations[]` — without them a facilitation scaffold is returned |
+| Root-cause analysis (many causes) | `fishbone_diagram` | `problem`; optional `causes[]` ({ category, causes[] }) — without it a facilitation scaffold is returned |
 | Strategic assessment of one subject | `swot_analysis` | `subject` (required); optional `strengths[]`, `weaknesses[]`, `opportunities[]`, `threats[]` — **see dual-mode note below** |
-| Decompose a problem into sub-issues | `issue_tree` | problem + depth |
-| Find an analogy for a problem | `analogical_mapper` | `problem`, `seed_domains[]` |
-| Surface hidden assumptions | `assumption_xray` | `claim`, `context` |
-| Pick the best executor for tasks | `comparative_advantage` | `skills` (map of agent → capability scores), `tasks` (map of task → required skills) |
-| Find friction in a process log | `drag_point_audit` | `log`, optional `categories[]` |
-| Design deliberate practice | `safe_struggle_designer` | `skill`, `current_level`, `target_level`, optional `constraints` |
-| Orchestrate multi-lens research | `seven_seekers_orchestrator` | `query`, optional `downstream_tools[]` |
-| Quantify if research is worth it | `value_of_information` | `decision_options[]`, `uncertainties[]`, `payoffs[]` |
+| Decompose a problem into sub-issues | `issue_tree` | `problem`, `depth`; optional `sub_questions[]` — without them a facilitation scaffold is returned |
+| Import solution patterns from other domains | `analogical_mapper` | `problem`, `seed_domains[]`, `k` — returns per-domain guiding questions (scaffold; you construct the analogy) |
+| Surface hidden assumptions | `assumption_xray` | `claim`, `context` — heuristic extraction (universality, causality, necessity, comparatives) with evidence, heuristic confidence and falsification tests |
+| Pick the best executor for tasks | `comparative_advantage` | `skills` (map of agent → { skill: level }), `tasks` (map of task → required skills[]) — scores each agent per task's required skills; missing skills count as 0 |
+| Find friction in a process log | `drag_point_audit` | `log` (real scan: keyword counts, repeated messages, drag density); `categories[]` = keywords (default: error, warning, timeout, retry, slow) |
+| Design deliberate practice | `safe_struggle_designer` | `skill`, `current_level`, `target_level` (must be greater), optional `constraints` — review interval derived from the level gap |
+| Orchestrate multi-lens research | `seven_seekers_orchestrator` | `query`, optional `downstream_tools[]` — returns a 7-lens scaffold (empirical, logical, ethical, pragmatic, systemic, creative, critical) with guiding questions |
+| Quantify if research is worth it | `value_of_information` | `decision_options[]`, `uncertainties[]`, `payoffs[]` (opportunity cost per uncertainty, same order) — EVPI-style estimate with ranked uncertainties |
 | Smoke-test the tool wiring | `existing_tool_example` | `text` — echoes it back; useful to verify connectivity |
 | Get this guide as AGENTS.md content | `agents_guide` | optional `project_name`, `domain_context`, `codebase_root`; pass `existing_agents_md` to merge into existing content |
 | Inspect session state | `session_info` | — |
 | Persist / restore state | `session_export` / `session_import` | — |
 
-## swot_analysis dual mode
+## Dual-mode tools: facilitation vs. analysis
+
+Several tools (`swot_analysis`, `mind_map`, `concept_map`, `fishbone_diagram`,
+`issue_tree`, `analogical_mapper`, `seven_seekers_orchestrator`,
+`drag_point_audit` on empty logs) work in two modes:
+
+- `mode: 'facilitation'` — you have not provided content yet. The response
+  contains guiding questions. **Answer them yourself and call the tool again
+  with the content parameters.** Never present a facilitation scaffold as a
+  result.
+- `mode: 'analysis'` — your content was processed (structured, counted,
+  scored). Use it as the result.
+
+## swot_analysis specifics
 
 - **Call with only `subject`** when you have not yet gathered content: you get
   a facilitation scaffold with per-quadrant guiding questions. Answer them,
