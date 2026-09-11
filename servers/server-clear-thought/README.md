@@ -169,6 +169,35 @@ The server also exposes this guide as the `agents_guide` tool (also in the
 `AGENTS.md` content as `existing_agents_md` to merge the guide in — repeat
 calls update the inserted block in place instead of duplicating it.
 
+### Using `agents_guide` from chat
+
+You do not need this repository checked out — the tool ships with the server.
+Ask your coding agent in natural language; it calls the tool and writes the
+result back. Two typical prompts:
+
+Merge into an existing AGENTS.md (recommended — idempotent, in-place updates):
+
+> Read my AGENTS.md in this project. Call the `agents_guide` tool with its
+> content as `existing_agents_md`, `project_name: "Tradix"`,
+> `domain_context: "Algorithmic trading."` and
+> `codebase_root: "C:/repos/Tradix"`. Then write the returned `content` field
+> back to my AGENTS.md.
+
+Create a fresh document (no `existing_agents_md`):
+
+> Call `agents_guide` with `project_name: "Tradix"` and write the returned
+> `content` field to AGENTS.md at the project root.
+
+Tips:
+
+- In VS Code Copilot Chat you can also reference the tool directly: type `#`
+  and pick `agents_guide` — or the `utility` toolset, which exposes it as
+  `operation: "agents_guide"`.
+- The tool only returns text; your agent performs the file write. If the
+  response lists `unresolved_placeholders`, fill them in the written file.
+- Repeat merge calls stay idempotent: the inserted block is delimited by
+  `clear-thought:agents-guide` markers, so updates never duplicate it.
+
 ## Usage
 
 Each individual tool (e.g., `sequentialthinking`, `mentalmodel`, `debuggingapproach`, ...) is
