@@ -1,25 +1,30 @@
 # Active Context
 
 ## Current Task
-agents-template-docs (Branch: `feature/agents-template-docs`, gestapelt auf enhance-swot-analysis)
-Abgeschlossen: enhance-swot-analysis (094e46a, 2fd7e91) — vom User nach main gemerged.
+agents_guide-MCP-Tool (Branch: `feature/agents-template-docs`) — Template als MCP-Kommando nutzbar machen.
 
 ## Status
-AGENTS.md-Template erstellt: `servers/server-clear-thought/AGENTS.template.md` — englischer
-Usage-Guide für LLM-Agents, die den Clear-Thought-Server konsumieren:
-- Routing-Tabelle für alle 28 Einzel-Tools + 4 Toolset-Dispatch-Tabellen
-- 6 Workflow-Rezepte (Debug, Entscheidung, Argument-Stresstest, Ideation, Delegation, Research)
-- swot-Dual-Mode-Regeln, Anti-Patterns, Session-Persistenz, Projekt-Anpassungssektion
-- Platzhalter {{PROJECT_NAME}} / {{DOMAIN_CONTEXT}} / {{CODEBASE_ROOT}}
+Neues Tool `agents_guide` (Einzel-Tool + utility-Toolset, Operation `agents_guide`):
+- Full-Mode: komplettes AGENTS.md-Dokument, Platzhalter substituiert, Meta-Präambel entfernt,
+  unersetzte Platzhalter werden gemeldet.
+- Merge-Mode (existing_agents_md): Guide-Body in bestehenden Inhalt integriert, delimitiert
+  durch `<!-- clear-thought:agents-guide:start/end -->`-Marker; Repeat-Calls ersetzen den
+  Block in place (idempotent). Korrupte Marker → Append + Warning (kein Data Loss).
+- Template als generierte TS-Konstante eingebettet (`agents-guide-template.ts`, Sync-Test) —
+  immun gegen .dockerignore (*.md) und Smithery-Bundling.
 
-Commits: d1df88b (Template) + f731bc3 (README-Verweis) + d01d9aa (Review-Fixes).
-Review Runde 1: automatisierte Abdeckungsprüfung (32/32 Namen, alle Enums) + Subagent-Review
-fand HIGH #8 (camelCase-Parameternamen — hätten echte Calls gebrochen), MEDIUM #9
-(visualreasoning-Enum), MEDIUM #4 (Debugging-Liste unvollständig) — ALLE behoben in d01d9aa.
-Verify: grep 0 falsche Namen, alle 12 Debugging-Approaches, vitest 26/26, tsc exit 0.
+Commits: d1df88b (Template) + f731bc3 (README-Link) + d01d9aa (Review-Fixes) + 7a5cb51
+(agents_guide) + 81ea239 (Review-Fixes: E1/E3 embed, E2 Marker-Sanity, E4, E6, E7, E8).
+
+Review-Runde: 1 HIGH (.dockerignore *.md → ENOENT im Container) + 2 MEDIUM (Marker-Data-Loss,
+Smithery-Pfad) — ALLE behoben und gegenbewiesen: Docker-Image `:guide-verify` gebaut,
+agents_guide im Container geprüft (merge + toolset dispatch grün).
+Verify: tsc exit 0, vitest 36/36, E2E am Wire (full/merge/re-merge), Container-Smoke grün.
 
 ## Offene Punkte
-- User: Branch feature/agents-template-docs nach main mergen.
-- Achtung (Lesson): Edit-Tool-Änderungen an README.md auf /mnt/c wurden twice still reverts —
-  kritische Edits auf diesem Mount terminal-seitig machen + sofort committen.
+- User: Branch feature/agents-template-docs nach main mergen und deployen (Server neu
+  starten/damit das Tool im Chat verfügbar ist).
+- Nutzung im Chat: Agent bitten, `agents_guide` mit project_name/domain_context aufzurufen
+  und das `content`-Feld in die Ziel-AGENTS.md zu schreiben.
+
 

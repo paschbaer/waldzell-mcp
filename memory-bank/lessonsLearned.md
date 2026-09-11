@@ -2,6 +2,22 @@
 
 ## Avoid These Mistakes
 
+### WSL /mnt/c: Edit-Tools und Terminal können unterschiedliche Datei-Versionen sehen
+- **Issue**: replace_string_in_file meldete Erfolg, aber terminal-seitiges grep/git sah den
+  alten Inhalt (und umgekehrt) — Änderungen schienen zu "verschwinden".
+- **Root Cause**: Caching-/Sync-Lag zwischen VS-Code-Dateidienst und WSL-Terminal auf dem
+  Windows-Mount (/mnt/c).
+- **Prevention**: Bei Diskrepanzen immer terminal-seitig prüfen (grep/sed) und kritische
+  Edits terminal-seitig (python3-Replace) + sofort commit in EINEM Befehl ausführen.
+
+### .dockerignore *.md schluckt neue Markdown-Assets — Build grün, Laufzeit kaputt
+- **Issue**: Neues Tool las AGENTS.template.md zur Laufzeit; im Docker-Image fehlte die Datei
+  (.dockerignore: `*.md`, nur README ausgenommen) → erster Call ENOENT. Lokal alles grün.
+- **Root Cause**: COPY . . kann ignorieren, was .dockerignore ausschließt; Build-Success sagt
+  nichts über Laufzeit-Assets.
+- **Prevention**: Runtime-Assets entweder als Code einbetten (generierte TS-Konstante +
+  Sync-Test) oder explizit `!datei` in .dockerignore. Danach IMMER Container-Smoke-Test.
+
 ### Repo hat zwei Lockfile-Ebenen — npm install im Server-Ordner aktualisiert das FALSCHE
 - **Issue**: `servers/server-clear-thought/` ist Workspace-Mitglied des Root-Workspaces UND hat ein
   eigenes, in Git getracktes `package-lock.json` (für den Docker-Build via `npm ci`).
