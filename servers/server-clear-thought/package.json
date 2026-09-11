@@ -15,6 +15,7 @@
     "files": [
         "dist",
         "src",
+        "AGENTS.template.md",
         "smithery.yaml",
         "README.md",
         "LICENSE"

@@ -26,6 +26,7 @@ import { registerFishboneDiagram } from './fishbone-diagram.js';
 import { registerSwotAnalysis } from './swot-analysis.js';
 import { registerIssueTree } from './issue-tree.js';
 import { registerExistingToolExample } from './existing-tool-example.js';
+import { registerAgentsGuide } from './agents-guide.js';
 import { registerSessionManagement } from './session-management.js';
 
 import { registerReasoningToolset } from '../toolsets/reasoning.js';
@@ -66,6 +67,7 @@ export function registerTools(server: McpServer, sessionState: SessionState): vo
   registerSwotAnalysis(server, sessionState);
   registerIssueTree(server, sessionState);
   registerExistingToolExample(server, sessionState);
+  registerAgentsGuide(server, sessionState);
 
   // Register session management tools
   registerSessionManagement(server, sessionState);

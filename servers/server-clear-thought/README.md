@@ -163,6 +163,12 @@ Building an agent that consumes this server? Copy
 `AGENTS.md` — it contains a tool routing table, workflow recipes, and usage
 rules optimized for LLM consumption.
 
+The server also exposes this guide as the `agents_guide` tool (also in the
+`utility` toolset): call it to get the guide rendered for your project
+(`project_name`, `domain_context`, `codebase_root`), or pass your existing
+`AGENTS.md` content as `existing_agents_md` to merge the guide in — repeat
+calls update the inserted block in place instead of duplicating it.
+
 ## Usage
 
 Each individual tool (e.g., `sequentialthinking`, `mentalmodel`, `debuggingapproach`, ...) is
