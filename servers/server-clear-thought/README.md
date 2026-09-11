@@ -173,8 +173,32 @@ compact lowercase (`sequentialthinking`, `mentalmodel`), while later additions u
 `swot_analysis` works in two modes. Without quadrant content it returns a facilitation
 scaffold with per-quadrant guiding questions. With content provided via the optional
 `strengths` / `weaknesses` / `opportunities` / `threats` arrays it returns the structured
-analysis, TOWS strategies (SO/WO/ST/WT) derived from 2x2 pairings, and scores (per-quadrant
-counts, balance, risk exposure).
+analysis, weighted scores, ranked TOWS strategies (SO/WO/ST/WT), and match metadata.
+
+Quadrant entries accept either a plain string or an object `{ text, impact, likelihood,
+tags }` with `impact`/`likelihood` in 1–5 (default 3). Entries are returned normalized
+as objects, and `towsRanked` lists the strategic pairs sorted by `impact × likelihood`
+(pairScore) with a stable input-order tiebreaker.
+
+**Breaking changes vs. the previous behavior (v2):**
+
+- `topN` (default **5**) caps the strategic pairs per TOWS quadrant after ranking; the
+  previous hard-coded 2x2 cap on the first entries per side is gone. Pass `topN: 0` for
+  the unlimited cross product. `tows` and `towsRanked` are cut consistently — TOWS strings
+  stay score-free, scores live only in `towsRanked` (`pair`, `score`, `tags`, `sharedTags`).
+- Quadrant arrays in the response are **normalized objects** (`{ text, impact, likelihood,
+  tags }`), not the raw input strings — consumers reading plain strings must switch to
+  `.text`.
+
+**Tag matching:** `matchMode: "tags"` keeps only pairs whose entries share at least one
+tag (case-insensitive; `sharedTags` reports the intersection in the first side's
+spelling, exactly one pair per entry combination). Untagged entries — including plain
+strings — form no pairs and are reported in `meta.unpaired`. `towsRanked[].tags` mirrors
+both entries' tags in input order (duplicates preserved). `meta.weightedEntries` counts
+the entries supplied as objects (vs. defaulted plain strings) per quadrant.
+`meta.truncatedPerQuadrant` shows where `topN` cut. The default `matchMode: "all"` keeps
+the full cross product and leaves `unpaired` empty. `scores.weighted` mirrors the v1
+balance/riskExposure ratios on weighted sums (impact × likelihood per entry).
 
 ### Mental Models
 
