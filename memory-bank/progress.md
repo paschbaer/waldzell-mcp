@@ -30,10 +30,18 @@ verifiziert (`:fix-verify`), `latest` unangetastet.
   (Einzel-Tool bleibt), visualization = 5 Operationen. Optionsliste bei unbekannter Operation,
   README-Wording korrigiert, Kollisions-Symmetrie-Test. vitest 19/19, E2E auf Port 3001 grün.
 
-### SWOT-Upgrade (Branch feature/enhance-swot-analysis: 094e46a + 2fd7e91, offen)
+### SWOT-Upgrade (vom User nach main gemerged)
 - swot_analysis vom Stub zum Dual-Mode: Facilitation-Scaffold (Leitfragen) ohne Inhalte,
   Analysis mit Passthrough + TOWS (SO/WO/ST/WT) + Scores (Counts, balance, riskExposure)
   + Kopplungshinweise (decisionframework/mentalmodel).
 - Review: approve with comments (0 HIGH/CRITICAL); Kommentare umgesetzt (subject trim+min(1),
   Balance-Semantik dokumentiert/getestet, README-Doku). tsc exit 0, vitest 26/26,
   E2E-Wire-Verifikation auf Port 3001 grün.
+
+### AGENTS.md-Template (Branch feature/agents-template-docs: d1df88b + f731bc3 + d01d9aa, offen)
+- servers/server-clear-thought/AGENTS.template.md: englischer LLM-Usage-Guide (Routing-Tabelle
+  28 Tools + 4 Toolsets, 6 Workflow-Rezepte, SWOT-Dual-Mode-Regeln, Anti-Patterns, Session-Guide,
+  {{PLATZHALTER}}-Sektion). README verlinkt das Template.
+- Review fand HIGH #8 (camelCase-Parameternamen), MEDIUM #9 (visualreasoning-Enum),
+  MEDIUM #4 (Debugging-Liste) — alle in d01d9aa behoben; 0 falsche Namen per grep verifiziert.
+  vitest 26/26, tsc exit 0.
