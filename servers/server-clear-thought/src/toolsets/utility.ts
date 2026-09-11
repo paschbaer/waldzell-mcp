@@ -10,6 +10,7 @@ import { registerSafeStruggleDesigner } from '../tools/safe-struggle-designer.js
 import { registerSevenSeekersOrchestrator } from '../tools/seven-seekers-orchestrator.js';
 import { registerValueOfInformation } from '../tools/value-of-information.js';
 import { registerExistingToolExample } from '../tools/existing-tool-example.js';
+import { registerAgentsGuide } from '../tools/agents-guide.js';
 
 export function registerUtilityToolset(server: McpServer, state: SessionState): void {
   const registry = new ToolsetRegistry('utility', 'Utility operations');
@@ -21,7 +22,8 @@ export function registerUtilityToolset(server: McpServer, state: SessionState): 
     registerSafeStruggleDesigner,
     registerSevenSeekersOrchestrator,
     registerValueOfInformation,
-    registerExistingToolExample
+    registerExistingToolExample,
+    registerAgentsGuide
   ].forEach(fn => {
     collectOperations(fn, state).forEach(op => registry.addOperation(op));
   });

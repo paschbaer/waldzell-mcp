@@ -1,24 +1,26 @@
 # Progress
 
 ## What works
-- SWOT v2 implementiert (feature/enhance-swot-analysis, Commit d38f1e0): Entry-Union mit
-  Gewichten/Tags, Ranking + topN, matchMode tags, scores.weighted, towsRanked, meta —
-  27 SWOT-Tests, Suite 46/46 grün, tsc exit 0, Review 0 HIGH/CRITICAL, README/Spec sync.
-- Clear-Thought-MCP-Server baut (`tsc` exit 0); alle 4 Toolsets advertisen korrekte Schemas
-  (`operation`-Enum + Felder) und dispatchen funktionierend.
-- Hybrides Tool-Angebot: Einzel-Tools + 4 Toolset-Tools in tools/list.
+- Clear-Thought-MCP-Server baut wieder (`tsc` exit 0) — vorher TS1185 durch Merge-Konflikt in `src/tools/index.ts`.
+- Alle 4 Toolsets (`reasoning`, `visualization`, `utility`, `session`) advertisen korrekte Schemas
+  (`operation`-Enum + Felder) und dispatchen funktionierend — vorher `Unknown operation: undefined`.
+- Hybrides Tool-Angebot: 26 Einzel-Tools + 4 Toolset-Tools (32 sichtbar in tools/list).
+- Testsuite: 15/15 grün (4 Dateien), inkl. neuer Regressionstests (`tests/toolset-registry.test.ts`).
 - Lockfiles konsistent: Root (Workspace) und server-lokal (Docker `npm ci`), SDK 1.30.0.
 
 ## What's left
+- User: Instanz auf Port 3000 neu bauen/starten, VS-Code-MCP-Client neu verbinden.
+- User: Feature-Branch `feature/fix-clear-thought-toolset-schemas` nach `main` mergen (Squash).
 - User: Branch feature/enhance-swot-analysis nach main mergen (Squash) + Deploy; beim
   nächsten Docker-Build Container-Smoke für SWOT v2.
-- User: Instanz auf Port 3000 neu bauen/starten, VS-Code-MCP-Client neu verbinden.
 
 ## Current State
-Branch `feature/enhance-swot-analysis`: SWOT v2 committed (d38f1e0, feat) auf Basis des
-v1-Dual-Mode-Upgrades (094e46a + 2fd7e91). Review v2: 0 HIGH/CRITICAL, alle Findings
-gefixt/dokumentiert. Spec-Datei (Tradix/Temp) mit verifizierten Entscheidungen
-synchronisiert. GitNexus-Index via CLI frisch gebaut.
+Commits auf Feature-Branch: `0995706` (Haupt-Fix: registry.ts, tools/index.ts, Tests, README,
+Dependency-Range) + `82a97b9` (Review-Follow-up: server-lokales Lockfile synchronisiert) +
+`c27a860` (Docker-Smoke: Lockfile frisch generiert, Base-Image node:22-alpine, engines >=20).
+Dazwischen liegt der User-Commit `cdce73d` (GitNexus-Skills).
+Review-Ergebnis: alle HIGH-Funde behoben; Docker-Image testweise gebaut und funktionstüchtig
+verifiziert (`:fix-verify`), `latest` unangetastet.
 
 ## Abgeschlossene Vorgänge (Historie, Stand 2026-09-10)
 
@@ -37,6 +39,14 @@ synchronisiert. GitNexus-Index via CLI frisch gebaut.
 - Review: approve with comments (0 HIGH/CRITICAL); Kommentare umgesetzt (subject trim+min(1),
   Balance-Semantik dokumentiert/getestet, README-Doku). tsc exit 0, vitest 26/26,
   E2E-Wire-Verifikation auf Port 3001 grün.
+
+### AGENTS.md-Template (Branch feature/agents-template-docs: d1df88b + f731bc3 + d01d9aa, offen)
+- servers/server-clear-thought/AGENTS.template.md: englischer LLM-Usage-Guide (Routing-Tabelle
+  28 Tools + 4 Toolsets, 6 Workflow-Rezepte, SWOT-Dual-Mode-Regeln, Anti-Patterns, Session-Guide,
+  {{PLATZHALTER}}-Sektion). README verlinkt das Template.
+- Review fand HIGH #8 (camelCase-Parameternamen), MEDIUM #9 (visualreasoning-Enum),
+  MEDIUM #4 (Debugging-Liste) — alle in d01d9aa behoben; 0 falsche Namen per grep verifiziert.
+  vitest 26/26, tsc exit 0.
 
 ### SWOT v2 (Commit d38f1e0, 2026-09-11)
 - swot_analysis v2 nach Spec (Tradix/Temp/clearthought-swot-v2-spec.md): Entry-Union
