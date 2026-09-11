@@ -77,16 +77,10 @@ export function registerValueOfInformation(server: McpServer, _sessionState: Ses
       if (payoffs.length < uncertainties.length) {
         warnings.push('Fewer payoffs than uncertainties — missing entries were treated as 0.');
       }
-      const probs = uncertainties.map((_, i) => {
-        const p = probabilities?.[i];
-        if (p === undefined) {
-          if (probabilities !== undefined && probabilities.length < uncertainties.length) {
-            warnings.push('Fewer probabilities than uncertainties — missing entries were treated as probability 1.');
-          }
-          return 1;
-        }
-        return p;
-      });
+      if (probabilities !== undefined && probabilities.length < uncertainties.length) {
+        warnings.push('Fewer probabilities than uncertainties — missing entries were treated as probability 1.');
+      }
+      const probs = uncertainties.map((_, i) => probabilities?.[i] ?? 1);
       if (probabilities && probabilities.length > uncertainties.length) {
         warnings.push('More probabilities than uncertainties — extra entries were ignored.');
       }
