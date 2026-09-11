@@ -27,8 +27,9 @@ structured reasoning tools. This guide tells you **which tool to use when**,
    call — the tools are designed to chain.
 3. **Close what you open.** Iterative tools end with a `next*Needed` flag; set
    it to `false` when done. Never leave a thinking sequence dangling.
-4. **State lives server-side per session.** Responses include a
-   `sessionContext` block with accumulated stats — read it, don't duplicate it.
+4. **State lives server-side per session.** Most stateful tools (e.g.
+   `sequentialthinking`, `swot_analysis`) return a `sessionContext` block with
+   accumulated stats — read it, don't duplicate it.
 5. **Prefer the cheapest sufficient tool.** A `mentalmodel` pass is cheaper
    than a full `decisionframework`; use the heavier tools for heavier stakes.
 
@@ -58,7 +59,7 @@ Toolset routing:
 |---|---|---|
 | Plan or reason step by step | `sequentialthinking` | `thought`, `thoughtNumber`, `totalThoughts`, `nextThoughtNeeded`; optional: `isRevision` + `revisesThought` to correct, `branchFromThought` + `branchId` to explore alternatives, `needsMoreThoughts` to extend |
 | Apply a thinking heuristic | `mentalmodel` | `modelName`: `first_principles` \| `opportunity_cost` \| `error_propagation` \| `rubber_duck` \| `pareto_principle` \| `occams_razor`; plus `problem`, `steps`, `reasoning`, `conclusion` |
-| Find a bug's root cause | `debuggingapproach` | `approachName`: `binary_search` \| `reverse_engineering` \| `divide_conquer` \| `backtracking` \| `cause_elimination` \| `program_slicing` \| `log_analysis` \| `static_analysis` |
+| Find a bug's root cause | `debuggingapproach` | `approachName`: `binary_search` \| `reverse_engineering` \| `divide_conquer` \| `backtracking` \| `cause_elimination` \| `program_slicing` \| `log_analysis` \| `static_analysis` \| `root_cause_analysis` \| `delta_debugging` \| `fuzzing` \| `incremental_testing`; plus `issue`, `steps[]` |
 | Deliberate from multiple personas | `collaborativereasoning` | persona + message + iteration pattern; set `nextContributionNeeded` |
 | Make a weighted decision | `decisionframework` | `decisionStatement`, `options[]` (name + description), `analysisType`, `stage`, `nextStageNeeded` |
 | Audit your own reasoning quality | `metacognitivemonitoring` | `task`, `stage`, `overallConfidence` (0–1), `uncertaintyAreas[]`, `recommendedApproach`, `nextAssessmentNeeded` |
@@ -67,19 +68,20 @@ Toolset routing:
 | Model a system's dynamics | `systemsthinking` | components + relationships (type: `positive` \| `negative` feedback), emerging patterns |
 | Test a hypothesis empirically | `scientificmethod` | `stage`: `observation` → `question` → `hypothesis` → `experiment` → `analysis` → `conclusion` → `iteration`; variables (independent/dependent/controlled/confounding), status: `proposed`/`testing`/`supported`/`refuted`/`refined` |
 | Build or attack an argument | `structuredargumentation` | `claim`, `premises[]`, `conclusion`, `argumentType`, `confidence` (0–1) |
-| Sketch a diagram of reasoning | `visualreasoning` | `operation` (`create`/`clear`), `diagramId`, `diagramType`, `iteration` |
+| Sketch a diagram of reasoning | `visualreasoning` | `operation`: `create` \| `update` \| `delete` \| `transform` \| `observe`; `diagramId`, `diagramType`, `iteration`, `nextOperationNeeded` |
 | Hierarchical brainstorm | `mind_map` | `topic`, `num_branches` |
-| Relate concepts with labels | `concept_map` | concepts + annotated relationships |
+| Relate concepts with labels | `concept_map` | `main_concept`, optional `related_concepts[]` |
 | Root-cause analysis (many causes) | `fishbone_diagram` | effect + categorized causes |
 | Strategic assessment of one subject | `swot_analysis` | `subject` (required); optional `strengths[]`, `weaknesses[]`, `opportunities[]`, `threats[]` — **see dual-mode note below** |
 | Decompose a problem into sub-issues | `issue_tree` | problem + depth |
-| Find an analogy for a problem | `analogical_mapper` | `problem`, `seedDomains[]` |
+| Find an analogy for a problem | `analogical_mapper` | `problem`, `seed_domains[]` |
 | Surface hidden assumptions | `assumption_xray` | `claim`, `context` |
 | Pick the best executor for tasks | `comparative_advantage` | `skills` (map of agent → capability scores), `tasks` (map of task → required skills) |
 | Find friction in a process log | `drag_point_audit` | `log`, optional `categories[]` |
-| Design deliberate practice | `safe_struggle_designer` | `skill`, `currentLevel`, `targetLevel`, optional `constraints` |
-| Orchestrate multi-lens research | `seven_seekers_orchestrator` | `query`, optional `downstreamTools[]` |
-| Quantify if research is worth it | `value_of_information` | `decisionOptions[]`, `uncertainties[]`, `payoffs[]` |
+| Design deliberate practice | `safe_struggle_designer` | `skill`, `current_level`, `target_level`, optional `constraints` |
+| Orchestrate multi-lens research | `seven_seekers_orchestrator` | `query`, optional `downstream_tools[]` |
+| Quantify if research is worth it | `value_of_information` | `decision_options[]`, `uncertainties[]`, `payoffs[]` |
+| Smoke-test the tool wiring | `existing_tool_example` | `text` — echoes it back; useful to verify connectivity |
 | Inspect session state | `session_info` | — |
 | Persist / restore state | `session_export` / `session_import` | — |
 
@@ -147,7 +149,7 @@ comparative_advantage (map tasks to the best-suited agent)
 
 ```
 assumption_xray (on the question itself)
-→ seven_seekers_orchestrator (multi-lens sweep; downstreamTools to refine)
+→ seven_seekers_orchestrator (multi-lens sweep; downstream_tools to refine)
 → sequentialthinking (synthesize)
 → session_export (persist findings before the context closes)
 ```
