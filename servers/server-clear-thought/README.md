@@ -156,6 +156,13 @@ Or run with npx:
 npx @waldzellai/clear-thought
 ```
 
+## Agent Guide
+
+Building an agent that consumes this server? Copy
+[`AGENTS.template.md`](./AGENTS.template.md) to your project root as
+`AGENTS.md` — it contains a tool routing table, workflow recipes, and usage
+rules optimized for LLM consumption.
+
 ## Usage
 
 Each individual tool (e.g., `sequentialthinking`, `mentalmodel`, `debuggingapproach`, ...) is
