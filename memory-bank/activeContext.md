@@ -31,3 +31,20 @@ mind_map beide Modi, issue_tree, voi, seven_seekers), detect-changes risk low.
 - User: Branch feature/functional-tool-upgrades nach main mergen + deployen.
 - L5 (akzeptiert): Extra-Tests (seven_seekers-Defaults, Tie-Breaks, biweekly-Grenze,
   issue_tree-Depth-Grenzen) nur falls die Tools produktiv kritisch werden.
+
+
+## v2-Erweiterungen (f16cc06 + Nit-Fix, 2026-09-11)
+Alle drei Kategorie-2-Tools erweitert:
+- value_of_information: probabilities[] (gewichtet statt worst-case), option_payoffs
+  (per-Option-VoI-Ranking), sampled_uncertainties (partial VoI + share_of_total),
+  Facilitation-Scaffold bei leeren Unsicherheiten
+- comparative_advantage: capacity (greedy Multi-Task-Assignment, Erschoepfung ->
+  assignee null + Warning), costs (effective = skill/cost), assignment_mode-Feld
+- safe_struggle_designer: typed time fields (hours_per_week, session_minutes,
+  deadline_weeks) statt totem constraints-Record; success_criteria +
+  prerequisite_chain je Step; estimated_weeks + Deadline-Overrun-Warnings
+Review: approve (0 HIGH/CRITICAL). MEDIUM "Tests fehlen" = False Positive
+(Datei-Cache; Tests sind auf Disk, 78/78 gruen). Nits behoben:
+Probability-Warning-Dedup (hoisted). verify: tsc 0, vitest 78/78.
+Offen: Branch merge + deploy;LOW-Notes (localeCompare ICU, breakdown statisch im
+Capacity-Fall) dokumentiert und akzeptiert.
