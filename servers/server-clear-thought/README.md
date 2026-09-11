@@ -299,6 +299,7 @@ docker run -it waldzellai/clear-thought
 3. Build the project: `npm run build`
 4. Start the server: `npm run start:http` (or `npm start`) — listens on the `PORT` environment variable (default: `3000`)
 5. Run tests: `npm test`
+6. After every **deployment**, run the live functional test against the running instance: `npm run test:live` (or `BASE=<url>/mcp node scripts/funktionstest.mjs`). It exercises every registered tool — individual and toolset dispatch, dual-mode behavior and the session lifecycle — and exits non-zero on any failure. Treat it as the regression gate for deployments.
 
 ## Contributing
 

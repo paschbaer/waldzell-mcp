@@ -94,3 +94,12 @@
 - **Prevention**: Vor dem Schreiben der Tests jeden Spec-Beispielwert aus der
   definierten Formel ableiten; Diskrepanzen dem User melden und die Formel als
   maßgeblich bestätigen lassen.
+
+### Deployment-Gate: `npm run test:live` nach JEDEM Server-Deployment
+- **Issue**: Deployed Instanz und Repo-Stand drifteten auseinander (alte Tools, leere
+  Schemas), ohne dass es auffiel — Funktionstest gegen die laufende Instanz zeigte es erst
+  auf Nachfrage.
+- **Prevention**: Nach jedem Deploy `cd servers/server-clear-thought && npm run test:live`
+  (bzw. `BASE=<url>/mcp node scripts/funktionstest.mjs`) ausführen. Das Script testet alle
+  registrierten Tools (Einzel + Toolset-Dispatch), Dual-Mode-Verhalten und Session-Lifecycle;
+  Exit-Code non-zero bei jedem Fehler. Erst bei 43/43 grün ist ein Deployment fertig.
