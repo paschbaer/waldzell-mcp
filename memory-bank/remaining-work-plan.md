@@ -9,3 +9,7 @@
 | E4 (LOW): advertised-Schema bei Feldnamen-Kollisionen: erste Operation gewinnt | Wenn zwei Operationen eines Toolsets denselben Feldnamen mit differentem Typ einführen | Akzeptiert (im Code kommentiert). Vor dem Einführen kollidierender Felder Schema-Struktur überdenken. |
 | Neustart der Produktiv-Instanz auf Port 3000 + MCP-Client-Reconnect | Nächste Nutzung der Clear-Thought-Tools aus VS Code | Offen (User-Aktion). |
 | Merge des Feature-Branch nach `main` (Squash) | Wenn User den Abschluss bestätigt | Offen (User-Entscheidung). |
+| SWOT v2 (feature/enhance-swot-analysis): Commit-Freigabe für 3 Dateien (src/tests/README) | Nächste Session / wenn User committen will | Offen (User-Entscheidung, ask-before-committing). Suite 46/46, tsc 0, Review 0 HIGH/CRITICAL. |
+| SWOT v2: Review-Finding L10 ($ref-Dedup im Toolset-Schema ist feldordnungsabhängig: anyOf inline bei `strengths`, `$ref: '#/properties/strengths/items'` bei den anderen Quadranten) | Wenn die Quadranten-Feldreihenfolge im Schema geändert wird | Akzeptiert; Test toleriert beide Formen. Bei Reorder: Ref-Ziel im Test mitziehen. |
+| SWOT v2: Deployment/Container-Smoke | Wenn das Docker-Image mit SWOT v2 gebaut wird | Offen; Image bauen + tools/list-Serialization + ein tags-Mode-Call im Container prüfen (Lesson: Build ≠ Runtime). |
+| agents_guide (feature/agents-template-docs): Merge nach main + Server-Neustart | Wenn User den Abschluss bestätigt | Offen (User-Entscheidung, unverändert). |

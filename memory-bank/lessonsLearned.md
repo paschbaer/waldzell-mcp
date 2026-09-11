@@ -51,3 +51,30 @@
 - **Root Cause**: Merge wurde manuell aufgelöst, ohne `tsc` laufen zu lassen; kein CI-Gate.
 - **Prevention**: Nach jedem Merge sofort `npm run typecheck` (bzw. Build) ausführen; Funktionstest
   gegen die LAUFENDE Instanz erkennt Drift zwischen Source und Deployment.
+
+### GitNexus: MCP-Tools "No indexed repositories" — CLI mit --repo-Parameter ist der Ausweg
+- **Issue**: `mcp_gitnexus_impact` meldete "No indexed repositories", obwohl der Index
+  existierte; erster `analyze`-Lauf brach mit shadow-WAL-IO-Exception auf /mnt/c.
+- **Root Cause**: Der MCP-GitNexus-Server und die CLI nutzen getrennte Index-Sichten
+  (Session-Mismatch); der WSL-/mnt/c-Index-Build kann transient scheitern und beim
+  nächsten Lauf durchlaufen.
+- **Prevention**: Impact/detect-changes über die CLI ausführen:
+  `node .gitnexus/run.cjs impact <symbol> --repo <name>` bzw. `detect-changes --repo <name>`;
+  bei analyze-Fehlern einmal retry, bevor man die Pflicht-Checks als blockiert behandelt.
+
+### zod-to-json-schema dedupliziert wiederverwendete Zod-Instanzen als $ref statt anyOf
+- **Issue**: Test erwartete `items.anyOf` in ALLEN vier Quadranten-Feldern des
+  Toolset-Schemas; tatsächlich nur beim ersten Feld inline, danach
+  `$ref: '#/properties/strengths/items'` → "Target cannot be null or undefined".
+- **Root Cause**: zod-to-json-schema ersetzt Wiederholungen derselben Zod-Instanz durch
+  $ref auf das erste Vorkommen — semantisch äquivalent, aber nicht anyOf-identisch.
+- **Prevention**: Schema-Serialisierungstests müssen beide Formen akzeptieren
+  (`items.anyOf ?? items.$ref`); Union-Schemas überleben tools/list trotzdem.
+
+### Spec-Beispielwerte können Rechenfehler enthalten — Formel nachrechnen
+- **Issue**: SWOT-v2-Spec nannte pairScore 100 (korrekt: 25×16=400) und
+  weighted.riskExposure 0.58 (korrekt: 50/68≈0.74). Blindes Testen gegen die Werte
+  hätte die Formel-Implementierung "falsch fixiert".
+- **Prevention**: Vor dem Schreiben der Tests jeden Spec-Beispielwert aus der
+  definierten Formel ableiten; Diskrepanzen dem User melden und die Formel als
+  maßgeblich bestätigen lassen.
